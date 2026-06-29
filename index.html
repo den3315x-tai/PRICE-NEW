@@ -37,16 +37,16 @@
 
             <div class="select-row">
               <label class="field">
-                <span>品牌</span>
+                <span>品牌 *</span>
                 <select id="brandSelect">
-                  <option value="">全部品牌</option>
+                  <option value="">請選擇品牌</option>
                 </select>
               </label>
 
               <label class="field">
-                <span>車型</span>
+                <span>車型 *</span>
                 <select id="modelSelect" disabled>
-                  <option value="">全部車型</option>
+                  <option value="">請選擇車型</option>
                 </select>
               </label>
             </div>
@@ -54,9 +54,14 @@
             <label class="field">
               <span>年份</span>
               <select id="yearSelect" disabled>
-                <option value="">全部年份</option>
+                <option value="">年份選填</option>
               </select>
             </label>
+          </div>
+
+          <div class="actions-row">
+            <p class="hint-text">品牌、車型為必選，年份為選填。</p>
+            <button id="searchButton" class="primary-button" type="button">查詢</button>
           </div>
 
           <p id="statusMessage" class="status-message" role="status">讀取資料中...</p>

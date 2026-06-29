@@ -65,6 +65,66 @@ const SAMPLE_ROWS = [
     售價: "56.8萬",
     發票: "有",
   },
+  {
+    車號: "AAA-1111",
+    品牌: "AUDI",
+    車型: "A1",
+    年份: "21/04",
+    排氣量: "1.8",
+    顏色: "白",
+    里程數: "1.5",
+    一手車: "Y",
+    車況: "A",
+    車況備注: "全車原鈑件",
+    車輛照片: "https://photos.app.goo.gl/KNLX9V7nBjiq4MYb8",
+    售價: "49.9",
+    發票: "F",
+  },
+  {
+    車號: "TTT-2020",
+    品牌: "TOYOTA",
+    車型: "ALTIS",
+    年份: "21/09",
+    排氣量: "1.8",
+    顏色: "銀",
+    里程數: "2.1",
+    一手車: "Y",
+    車況: "A",
+    車況備注: "原廠保養",
+    車輛照片: "https://example.com/car-5",
+    售價: "52.8",
+    發票: "有",
+  },
+  {
+    車號: "HHH-7788",
+    品牌: "HONDA",
+    車型: "CR-V",
+    年份: "20/02",
+    排氣量: "1.5T",
+    顏色: "灰",
+    里程數: "3.2",
+    一手車: "N",
+    車況: "B",
+    車況備注: "已整理烤漆",
+    車輛照片: "https://example.com/car-6",
+    售價: "63.5",
+    發票: "無",
+  },
+  {
+    車號: "MZD-4321",
+    品牌: "MAZDA",
+    車型: "CX-5",
+    年份: "19/11",
+    排氣量: "2.0",
+    顏色: "藍",
+    里程數: "4.6",
+    一手車: "N",
+    車況: "A",
+    車況備注: "配備完整",
+    車輛照片: "https://example.com/car-7",
+    售價: "58.8",
+    發票: "F",
+  },
 ];
 
 const FIELD_ORDER = [
@@ -88,6 +148,7 @@ const dom = {
   brandSelect: document.querySelector("#brandSelect"),
   modelSelect: document.querySelector("#modelSelect"),
   yearSelect: document.querySelector("#yearSelect"),
+  searchButton: document.querySelector("#searchButton"),
   resetFilters: document.querySelector("#resetFilters"),
   statusMessage: document.querySelector("#statusMessage"),
   resultSummary: document.querySelector("#resultSummary"),
@@ -104,6 +165,7 @@ const state = {
     model: "",
     year: "",
   },
+  hasSearched: false,
 };
 
 bootstrap();
@@ -121,13 +183,12 @@ async function bootstrap() {
   }
 
   syncFilterOptions();
-  applyFilters();
+  renderResults();
 }
 
 function bindEvents() {
   dom.plateInput.addEventListener("input", (event) => {
     state.filters.plate = event.target.value.trim().toUpperCase();
-    applyFilters();
   });
 
   dom.brandSelect.addEventListener("change", (event) => {
@@ -135,26 +196,37 @@ function bindEvents() {
     state.filters.model = "";
     state.filters.year = "";
     syncFilterOptions();
-    applyFilters();
   });
 
   dom.modelSelect.addEventListener("change", (event) => {
     state.filters.model = event.target.value;
     state.filters.year = "";
     syncFilterOptions();
-    applyFilters();
   });
 
   dom.yearSelect.addEventListener("change", (event) => {
     state.filters.year = event.target.value;
+  });
+
+  dom.searchButton.addEventListener("click", () => {
+    if (!state.filters.brand || !state.filters.model) {
+      setStatus("請先選擇品牌與車型，再進行查詢。");
+      state.hasSearched = false;
+      renderResults();
+      return;
+    }
+
+    state.hasSearched = true;
     applyFilters();
   });
 
   dom.resetFilters.addEventListener("click", () => {
     state.filters = { plate: "", brand: "", model: "", year: "" };
+    state.hasSearched = false;
     dom.plateInput.value = "";
     syncFilterOptions();
-    applyFilters();
+    setStatus(`資料已載入，共 ${state.rows.length} 筆，請選擇品牌與車型後查詢。`);
+    renderResults();
   });
 }
 
@@ -221,21 +293,21 @@ function syncFilterOptions() {
     state.rows.filter((row) => !state.filters.brand || row.品牌 === state.filters.brand),
     "車型"
   );
-  const years = uniqueValues(
+  const years = uniqueYearValues(
     state.rows.filter(
       (row) =>
         (!state.filters.brand || row.品牌 === state.filters.brand) &&
         (!state.filters.model || row.車型 === state.filters.model)
-    ),
-    "年份"
+    )
   );
 
-  fillSelect(dom.brandSelect, brands, "全部品牌", state.filters.brand);
-  fillSelect(dom.modelSelect, models, "全部車型", state.filters.model);
-  fillSelect(dom.yearSelect, years, "全部年份", state.filters.year);
+  fillSelect(dom.brandSelect, brands, "請選擇品牌", state.filters.brand);
+  fillSelect(dom.modelSelect, models, "請選擇車型", state.filters.model);
+  fillYearSelect(dom.yearSelect, years, "年份選填", state.filters.year);
 
   dom.modelSelect.disabled = models.length === 0;
   dom.yearSelect.disabled = years.length === 0;
+  dom.searchButton.disabled = false;
 }
 
 function fillSelect(select, values, defaultLabel, selectedValue) {
@@ -261,19 +333,73 @@ function uniqueValues(rows, key) {
   );
 }
 
+function uniqueYearValues(rows) {
+  const yearMap = new Map();
+
+  rows.forEach((row) => {
+    const rawYear = row.年份;
+    const displayYear = toDisplayYear(rawYear);
+    if (displayYear) {
+      yearMap.set(displayYear, displayYear);
+    }
+  });
+
+  return [...yearMap.values()].sort((a, b) => Number(b) - Number(a));
+}
+
+function fillYearSelect(select, values, defaultLabel, selectedValue) {
+  select.innerHTML = "";
+
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = defaultLabel;
+  select.append(defaultOption);
+
+  values.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    option.selected = value === selectedValue;
+    select.append(option);
+  });
+}
+
+function toDisplayYear(rawYear) {
+  const value = String(rawYear || "").trim();
+  const match = value.match(/^(\d{2})[/-]\d{2}$/);
+
+  if (match) {
+    return `20${match[1]}`;
+  }
+
+  if (/^\d{4}$/.test(value)) {
+    return value;
+  }
+
+  return "";
+}
+
 function applyFilters() {
   state.filteredRows = state.rows.filter((row) => {
     const byPlate = !state.filters.plate || row.車號.toUpperCase().includes(state.filters.plate);
-    const byBrand = !state.filters.brand || row.品牌 === state.filters.brand;
-    const byModel = !state.filters.model || row.車型 === state.filters.model;
-    const byYear = !state.filters.year || row.年份 === state.filters.year;
+    const byBrand = row.品牌 === state.filters.brand;
+    const byModel = row.車型 === state.filters.model;
+    const byYear = !state.filters.year || toDisplayYear(row.年份) === state.filters.year;
     return byPlate && byBrand && byModel && byYear;
   });
 
+  setStatus(`資料已載入，共 ${state.rows.length} 筆，查詢結果 ${state.filteredRows.length} 筆。`);
   renderResults();
 }
 
 function renderResults() {
+  if (!state.hasSearched) {
+    dom.resultSummary.textContent = "尚未查詢";
+    dom.mobileResults.innerHTML = '<div class="empty-state">請先選擇品牌與車型，再按下查詢。</div>';
+    dom.tableBody.innerHTML = '<tr><td colspan="13">請先選擇品牌與車型，再按下查詢。</td></tr>';
+    return;
+  }
+
   dom.resultSummary.textContent = `共 ${state.filteredRows.length} 筆資料`;
 
   if (state.filteredRows.length === 0) {
