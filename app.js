@@ -395,7 +395,7 @@ function fillSelect(select, values, defaultLabel, selectedValue) {
 
 function uniqueValues(rows, key) {
   return [...new Set(rows.map((row) => row[key]).filter((value) => value && value !== "-"))].sort(
-    (a, b) => a.localeCompare(b, "zh-Hant")
+    (a, b) => a.localeCompare(b, "en", { sensitivity: "base", numeric: true })
   );
 }
 
