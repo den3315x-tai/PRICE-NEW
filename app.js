@@ -19,7 +19,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-1",
     售價: "35.8萬",
     發票: "有",
-    已買進日: "2025/12/03",
   },
   {
     車號: "BDE-7788",
@@ -35,7 +34,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-2",
     售價: "69.8萬",
     發票: "有",
-    已買進日: "2026/01/18",
   },
   {
     車號: "KLM-2456",
@@ -51,7 +49,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-3",
     售價: "42.5萬",
     發票: "無",
-    已買進日: "2025/08/27",
   },
   {
     車號: "PLQ-9001",
@@ -67,7 +64,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-4",
     售價: null,
     發票: "有",
-    已買進日: "2025/05/11",
   },
   {
     車號: "AAA-1111",
@@ -83,7 +79,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://photos.app.goo.gl/KNLX9V7nBjiq4MYb8",
     售價: "49.9",
     發票: "F",
-    已買進日: "2026/03/12",
   },
   {
     車號: "TTT-2020",
@@ -99,7 +94,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-5",
     售價: "52.8",
     發票: "有",
-    已買進日: "2026/02/06",
   },
   {
     車號: "HHH-7788",
@@ -115,7 +109,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-6",
     售價: "63.5",
     發票: "無",
-    已買進日: "2025/10/21",
   },
   {
     車號: "MZD-4321",
@@ -131,7 +124,6 @@ const SAMPLE_ROWS = [
     車輛照片: "https://example.com/car-7",
     售價: "58.8",
     發票: "F",
-    已買進日: "2026/04/08",
   },
 ];
 
@@ -262,11 +254,13 @@ async function loadRows() {
 function normalizeRows(rows) {
   return rows
     .map((row) => {
+      const rawYear = getFirstValue(row, ["年份", "年式"]);
+
       return {
         車號: getFirstValue(row, ["車號", "車牌", "牌照"]) || "-",
         品牌: getFirstValue(row, ["品牌"]) || "-",
         車型: getFirstValue(row, ["車型", "型號"]) || "-",
-        年份: getFirstValue(row, ["年份", "年式"]) || "-",
+        年份: rawYear || "-",
         排氣量: getFirstValue(row, ["排氣量", "cc"]) || "-",
         顏色: getFirstValue(row, ["顏色"]) || "-",
         里程數: getFirstValue(row, ["里程數", "里程"]) || "-",
@@ -276,7 +270,7 @@ function normalizeRows(rows) {
         車輛照片: getFirstValue(row, ["車輛照片", "照片", "圖片", "照片網址", "圖片網址"]) || "-",
         售價: normalizePrice(getFirstValue(row, ["售價", "價格"])) || "未開價",
         發票: normalizeNullDisplay(getFirstValue(row, ["發票", "F"])) || "-",
-        __boughtDate: normalizeBoughtDate(getFirstValue(row, ["已買進日", "買進日", "購入日"])),
+        __yearSort: normalizeYearSortValue(rawYear),
       };
     })
     .filter((row) => row.車號 !== "-" || row.品牌 !== "-" || row.車型 !== "-");
@@ -318,16 +312,26 @@ function normalizeNullDisplay(value) {
   return normalized;
 }
 
-function normalizeBoughtDate(value) {
+function normalizeYearSortValue(value) {
   const normalized = String(value || "").trim();
   if (!normalized || normalized.toUpperCase() === "NULL") {
     return 0;
   }
 
-  const dateMatch = normalized.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
-  if (dateMatch) {
-    const [, year, month, day] = dateMatch;
-    return Number(`${year}${month.padStart(2, "0")}${day.padStart(2, "0")}`);
+  const yearMonthMatches = [...normalized.matchAll(/(\d{2,4})[/-](\d{1,2})/g)];
+  if (yearMonthMatches.length > 0) {
+    return Math.max(
+      ...yearMonthMatches.map(([, year]) => {
+        if (year.length === 2) {
+          return Number(`20${year}`);
+        }
+        return Number(year);
+      })
+    );
+  }
+
+  if (/^\d{4}$/.test(normalized)) {
+    return Number(normalized);
   }
 
   return 0;
@@ -412,10 +416,18 @@ function fillYearSelect(select, values, defaultLabel, selectedValue) {
 
 function toDisplayYear(rawYear) {
   const value = String(rawYear || "").trim();
-  const match = value.match(/^(\d{2})[/-]\d{2}$/);
+  const yearMonthMatches = [...value.matchAll(/(\d{2,4})[/-](\d{1,2})/g)];
 
-  if (match) {
-    return `20${match[1]}`;
+  if (yearMonthMatches.length > 0) {
+    const latestYear = Math.max(
+      ...yearMonthMatches.map(([, year]) => {
+        if (year.length === 2) {
+          return Number(`20${year}`);
+        }
+        return Number(year);
+      })
+    );
+    return String(latestYear);
   }
 
   if (/^\d{4}$/.test(value)) {
@@ -438,7 +450,7 @@ function applyFilters() {
       const byYear = !state.filters.year || toDisplayYear(row.年份) === state.filters.year;
       return byPlate && byBrand && byModel && byYear;
     })
-    .sort((a, b) => (b.__boughtDate || 0) - (a.__boughtDate || 0));
+    .sort((a, b) => (b.__yearSort || 0) - (a.__yearSort || 0));
 
   setStatus(`資料已載入，共 ${state.rows.length} 筆，查詢結果 ${state.filteredRows.length} 筆。`);
   renderResults();
