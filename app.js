@@ -1,7 +1,7 @@
 const API_CONFIG = {
   // 填入 Apps Script Web App URL。
   // 例如: https://script.google.com/macros/s/xxxxx/exec
-  apiUrl: "https://script.google.com/macros/s/AKfycbzsZXg330Ic7VlcJ_RdUePkf3QJ9zmYtbablsKN6hId00mmwUa_pRtH7KMo4R4JGKBMUw/exec",
+  apiUrl: "https://script.google.com/macros/s/AKfycbxeF2AVlCYi9A5xnYtvWfEAGJeRg8PwJOaojl3lUNhwkFvTAfxCoLz_hm_kjahIXRukOA/exec",
 };
 
 const SAMPLE_ROWS = [
