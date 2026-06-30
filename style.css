@@ -269,7 +269,7 @@ select {
 .result-card__summary {
   list-style: none;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
   padding: 18px 16px;
   cursor: pointer;
@@ -306,26 +306,35 @@ select {
   word-break: break-word;
 }
 
-.result-card__chevron {
-  width: 36px;
-  height: 36px;
+.result-card__toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 92px;
+  padding: 9px 12px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #f5f8ff, #edf3ff);
+  border: 1px solid rgba(47, 102, 255, 0.18);
+  background: linear-gradient(180deg, #f7faff, #eef4ff);
   color: var(--accent-deep);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
 }
 
-.result-card__chevron svg {
-  width: 18px;
-  height: 18px;
+.result-card[open] .result-card__toggle {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
 }
 
-.result-card[open] .result-card__chevron {
-  transform: rotate(90deg);
+.result-card[open] .result-card__toggle::before {
+  content: "收合詳細";
+}
+
+.result-card[open] .result-card__toggle {
+  font-size: 0;
 }
 
 .result-card__details {
@@ -561,6 +570,10 @@ tbody tr:nth-child(even) {
   .price-chip {
     min-width: 84px;
     padding: 8px 10px;
+  }
+
+  .result-card__summary {
+    align-items: flex-start;
   }
 }
 
