@@ -143,7 +143,7 @@ const FIELD_ORDER = [
   "發票",
 ];
 
-const CARD_SUMMARY_FIELDS = ["年份", "品牌", "車型", "里程數", "售價"];
+const CARD_SUMMARY_FIELDS = ["年份", "車號", "排氣量", "里程數", "售價"];
 const CARD_DETAIL_FIELDS = FIELD_ORDER.filter((field) => !CARD_SUMMARY_FIELDS.includes(field));
 
 const dom = {
@@ -486,11 +486,7 @@ function renderMobileCard(row) {
         <div class="result-card__summary-main">
           ${CARD_SUMMARY_FIELDS.map((field) => renderSummaryItem(field, row[field])).join("")}
         </div>
-        <span class="result-card__chevron" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
+        <span class="result-card__toggle" aria-hidden="true">展開詳細</span>
       </summary>
       <div class="result-card__details">
         <div class="result-card__head">
