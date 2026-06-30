@@ -314,9 +314,15 @@ select {
   text-align: right;
 }
 
+.price-chip--emphasis {
+  background: linear-gradient(180deg, #fff2f2, #ffe5e5);
+  color: #d62828;
+}
+
 .price-chip strong {
   display: block;
-  font-size: 1rem;
+  font-size: 1.12rem;
+  font-weight: 800;
 }
 
 .price-chip span {
@@ -435,6 +441,11 @@ tbody tr:nth-child(even) {
 
 .tag-warn {
   color: var(--warning);
+}
+
+.price-emphasis {
+  color: #d62828;
+  font-weight: 800;
 }
 
 @media (min-width: 760px) {
