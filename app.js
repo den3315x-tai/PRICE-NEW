@@ -6,128 +6,44 @@ const API_CONFIG = {
 
 const SAMPLE_ROWS = [
   {
-    車號: "ABC-1234",
-    品牌: "TOYOTA",
-    車型: "ALTIS",
-    年份: "20/04",
-    排氣量: "1.8",
+    買進日: "2026-06-29",
+    來源: "B 朝欽 3",
+    車號: "RFA-2103",
+    品牌: "FORD",
+    車型: "KUGA",
+    年份: "23/05",
+    排氣量: "2",
     顏色: "白",
-    里程數: "1.9",
-    一手車: "Y",
+    里程數: "3.5",
+    一手車: "NULL",
     車況: "A",
-    車況備注: "原鈑件，定保完整",
-    車輛照片: "https://example.com/car-1",
-    售價: "35.8萬",
-    發票: "有",
-  },
-  {
-    車號: "BDE-7788",
-    品牌: "HONDA",
-    車型: "CR-V",
-    年份: "21/06",
-    排氣量: "1.5T",
-    顏色: "黑",
-    里程數: "2.9",
-    一手車: "N",
-    車況: "A",
-    車況備注: "一手車，配備齊全",
-    車輛照片: "https://example.com/car-2",
-    售價: "69.8萬",
-    發票: "有",
-  },
-  {
-    車號: "KLM-2456",
-    品牌: "MAZDA",
-    車型: "MAZDA3",
-    年份: "19/03",
-    排氣量: "2.0",
-    顏色: "魂動紅",
-    里程數: "3.8",
-    一手車: "N",
-    車況: "B",
-    車況備注: "前保桿小傷，已整理",
-    車輛照片: "https://example.com/car-3",
-    售價: "42.5萬",
-    發票: "無",
-  },
-  {
-    車號: "PLQ-9001",
-    品牌: "BMW",
-    車型: "320i",
-    年份: "18/11",
-    排氣量: "2.0",
-    顏色: "灰",
-    里程數: "4.2",
-    一手車: "Y",
-    車況: "B",
-    車況備注: "里程透明，可第三方鑑定",
-    車輛照片: "https://example.com/car-4",
-    售價: null,
-    發票: "有",
-  },
-  {
-    車號: "AAA-1111",
-    品牌: "AUDI",
-    車型: "A1",
-    年份: "21/04",
-    排氣量: "1.8",
-    顏色: "白",
-    里程數: "1.5",
-    一手車: "Y",
-    車況: "A",
-    車況備注: "全車原鈑件",
-    車輛照片: "https://photos.app.goo.gl/KNLX9V7nBjiq4MYb8",
-    售價: "49.9",
+    車況備注: "NULL",
+    車輛照片: "NULL",
+    售價: "68.9",
     發票: "F",
   },
   {
-    車號: "TTT-2020",
-    品牌: "TOYOTA",
-    車型: "ALTIS",
-    年份: "21/09",
-    排氣量: "1.8",
-    顏色: "銀",
-    里程數: "2.1",
-    一手車: null,
-    車況: "A",
-    車況備注: "原廠保養",
-    車輛照片: "https://example.com/car-5",
-    售價: "52.8",
-    發票: "有",
-  },
-  {
-    車號: "HHH-7788",
-    品牌: "HONDA",
-    車型: "CR-V",
-    年份: "20/02",
-    排氣量: "1.5T",
-    顏色: "灰",
-    里程數: "3.2",
-    一手車: "N",
-    車況: "B",
-    車況備注: "已整理烤漆",
-    車輛照片: "https://example.com/car-6",
-    售價: "63.5",
-    發票: "無",
-  },
-  {
-    車號: "MZD-4321",
-    品牌: "MAZDA",
-    車型: "CX-5",
-    年份: "19/11",
-    排氣量: "2.0",
-    顏色: "藍",
-    里程數: "4.6",
+    買進日: "2026-06-29",
+    來源: "B 朝欽 23",
+    車號: "RDS-1577",
+    品牌: "FORD",
+    車型: "KUGA",
+    年份: "22/05",
+    排氣量: "1.5",
+    顏色: "白",
+    里程數: "10.2",
     一手車: "NULL",
-    車況: "A",
-    車況備注: "配備完整",
-    車輛照片: "https://example.com/car-7",
-    售價: "58.8",
+    車況: "B",
+    車況備注: "NULL",
+    車輛照片: "NULL",
+    售價: "43.9",
     發票: "F",
   },
 ];
 
 const FIELD_ORDER = [
+  "買進日",
+  "來源",
   "車號",
   "品牌",
   "車型",
@@ -260,6 +176,8 @@ function normalizeRows(rows) {
       const rawYear = getFirstValue(row, ["年份", "年式"]);
 
       return {
+        買進日: normalizeNullDisplay(getFirstValue(row, ["買進日", "已買進日", "購入日"])) || "-",
+        來源: normalizeNullDisplay(getFirstValue(row, ["來源", "資料來源"])) || "-",
         車號: getFirstValue(row, ["車號", "車牌", "牌照"]) || "-",
         品牌: getFirstValue(row, ["品牌"]) || "-",
         車型: getFirstValue(row, ["車型", "型號"]) || "-",
@@ -476,7 +394,7 @@ function renderResults() {
   if (!state.hasSearched) {
     dom.resultSummary.textContent = "尚未查詢";
     dom.mobileResults.innerHTML = '<div class="empty-state">請先選擇品牌與車型，或直接輸入車號關鍵字後查詢。</div>';
-    dom.tableBody.innerHTML = '<tr><td colspan="13">請先選擇品牌與車型，或直接輸入車號關鍵字後查詢。</td></tr>';
+    dom.tableBody.innerHTML = '<tr><td colspan="15">請先選擇品牌與車型，或直接輸入車號關鍵字後查詢。</td></tr>';
     return;
   }
 
@@ -484,7 +402,7 @@ function renderResults() {
 
   if (state.filteredRows.length === 0) {
     dom.mobileResults.innerHTML = '<div class="empty-state">查無符合條件的車輛資料</div>';
-    dom.tableBody.innerHTML = '<tr><td colspan="13">查無符合條件的車輛資料</td></tr>';
+    dom.tableBody.innerHTML = '<tr><td colspan="15">查無符合條件的車輛資料</td></tr>';
     return;
   }
 
