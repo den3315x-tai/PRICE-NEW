@@ -553,11 +553,16 @@ function renderTableCell(label, value) {
 }
 
 function renderPhotoLink(value) {
-  if (!value || value === "-") {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized === "-" || normalized.toUpperCase() === "NULL") {
     return '<span class="photo-link photo-link--empty">-</span>';
   }
 
-  const safeUrl = escapeAttribute(value);
+  if (!/^https?:\/\//i.test(normalized)) {
+    return '<span class="photo-link photo-link--empty">-</span>';
+  }
+
+  const safeUrl = escapeAttribute(normalized);
   return `<a class="photo-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">查看照片</a>`;
 }
 
