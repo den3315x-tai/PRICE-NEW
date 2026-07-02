@@ -173,10 +173,11 @@ async function loadRows() {
 function normalizeRows(rows) {
   return rows
     .map((row) => {
+      const rawBuyDate = getFirstValue(row, ["買進日", "已買進日", "購入日"]);
       const rawYear = getFirstValue(row, ["年份", "年式"]);
 
       return {
-        買進日: normalizeNullDisplay(getFirstValue(row, ["買進日", "已買進日", "購入日"])) || "-",
+        買進日: normalizeNullDisplay(rawBuyDate) || "-",
         來源: normalizeNullDisplay(getFirstValue(row, ["來源", "資料來源"])) || "-",
         車號: getFirstValue(row, ["車號", "車牌", "牌照"]) || "-",
         品牌: getFirstValue(row, ["品牌"]) || "-",
@@ -191,6 +192,7 @@ function normalizeRows(rows) {
         車輛照片: getFirstValue(row, ["車輛照片", "照片", "圖片", "照片網址", "圖片網址"]) || "-",
         售價: normalizePrice(getFirstValue(row, ["售價", "價格"])) || "未開價",
         發票: normalizeNullDisplay(getFirstValue(row, ["發票", "F"])) || "-",
+        __buyDateSort: normalizeBuyDateSortValue(rawBuyDate),
         __yearSort: normalizeYearSortValue(rawYear),
       };
     })
@@ -244,6 +246,27 @@ function normalizeNullDisplay(value) {
     return "";
   }
   return normalized;
+}
+
+function normalizeBuyDateSortValue(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized.toUpperCase() === "NULL") {
+    return 0;
+  }
+
+  const fullDateMatch = normalized.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  if (fullDateMatch) {
+    const [, year, month, day] = fullDateMatch;
+    return Number(`${year}${month.padStart(2, "0")}${day.padStart(2, "0")}`);
+  }
+
+  const monthMatch = normalized.match(/(\d{4})[/-](\d{1,2})/);
+  if (monthMatch) {
+    const [, year, month] = monthMatch;
+    return Number(`${year}${month.padStart(2, "0")}00`);
+  }
+
+  return 0;
 }
 
 function normalizeYearSortValue(value) {
@@ -384,7 +407,11 @@ function applyFilters() {
       const byYear = !state.filters.year || toDisplayYear(row.年份) === state.filters.year;
       return byPlate && byBrand && byModel && byYear;
     })
-    .sort((a, b) => (b.__yearSort || 0) - (a.__yearSort || 0));
+    .sort(
+      (a, b) =>
+        (b.__buyDateSort || 0) - (a.__buyDateSort || 0) ||
+        (b.__yearSort || 0) - (a.__yearSort || 0)
+    );
 
   setStatus(`資料已載入，共 ${state.rows.length} 筆，查詢結果 ${state.filteredRows.length} 筆。`);
   renderResults();
