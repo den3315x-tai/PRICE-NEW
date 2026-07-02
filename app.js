@@ -475,7 +475,7 @@ function renderMobileCard(row) {
         <div class="result-card__summary-main">
           ${CARD_SUMMARY_FIELDS.map((field) => renderSummaryItem(field, row[field])).join("")}
         </div>
-        <span class="result-card__toggle" aria-hidden="true">展開詳細</span>
+        <span class="result-card__toggle" style="${vehicleColorStyle(row.顏色)}" aria-hidden="true">展開詳細</span>
       </summary>
       <div class="result-card__details">
         <div class="result-card__grid">
@@ -484,6 +484,40 @@ function renderMobileCard(row) {
       </div>
     </details>
   `;
+}
+
+function vehicleColorStyle(color) {
+  const palette = resolveVehicleColorPalette(color);
+  return [
+    `--car-color-a: ${palette.a}`,
+    `--car-color-b: ${palette.b}`,
+    `--car-button-text: ${palette.text}`,
+    `--car-button-border: ${palette.border}`,
+    `--car-open-a: ${palette.openA}`,
+    `--car-open-b: ${palette.openB}`,
+    `--car-open-text: ${palette.openText}`,
+  ].join("; ");
+}
+
+function resolveVehicleColorPalette(color) {
+  const value = String(color || "").trim();
+  const palettes = [
+    { keys: ["黑"], a: "#4a4d48", b: "#222421", text: "#ffffff", border: "rgba(0, 0, 0, 0.22)", openA: "#2f312e", openB: "#111211", openText: "#ffffff" },
+    { keys: ["白"], a: "#fbfbf1", b: "#dfe3d5", text: "#3e463b", border: "rgba(112, 121, 104, 0.34)", openA: "#e8ebdf", openB: "#cfd6c4", openText: "#354034" },
+    { keys: ["銀", "灰"], a: "#d7ddd6", b: "#aeb7ad", text: "#334033", border: "rgba(93, 102, 92, 0.28)", openA: "#b7c0b6", openB: "#7f8b80", openText: "#ffffff" },
+    { keys: ["藍"], a: "#6f95b3", b: "#3f6f94", text: "#ffffff", border: "rgba(34, 78, 108, 0.28)", openA: "#4d7798", openB: "#2d5572", openText: "#ffffff" },
+    { keys: ["紅"], a: "#c76a60", b: "#9a3d35", text: "#ffffff", border: "rgba(120, 39, 33, 0.25)", openA: "#a94f46", openB: "#772c27", openText: "#ffffff" },
+    { keys: ["黃", "金"], a: "#e8c96b", b: "#c99b31", text: "#433617", border: "rgba(138, 101, 22, 0.28)", openA: "#d4aa3f", openB: "#a9781f", openText: "#ffffff" },
+    { keys: ["綠"], a: "#8aa77a", b: "#647d58", text: "#ffffff", border: "rgba(69, 94, 58, 0.28)", openA: "#718c64", openB: "#4c6542", openText: "#ffffff" },
+    { keys: ["棕", "咖啡"], a: "#a98467", b: "#75563f", text: "#ffffff", border: "rgba(91, 63, 43, 0.28)", openA: "#8f6c52", openB: "#5d402e", openText: "#ffffff" },
+    { keys: ["紫"], a: "#9a83aa", b: "#6f577e", text: "#ffffff", border: "rgba(83, 59, 96, 0.28)", openA: "#806391", openB: "#553d65", openText: "#ffffff" },
+    { keys: ["橘", "橙"], a: "#dc9a57", b: "#b96f2d", text: "#ffffff", border: "rgba(139, 78, 25, 0.28)", openA: "#c37e37", openB: "#90521f", openText: "#ffffff" },
+  ];
+
+  return (
+    palettes.find((palette) => palette.keys.some((key) => value.includes(key))) ||
+    { a: "#d7dccd", b: "#cbd3c0", text: "#4e5947", border: "rgba(98, 110, 93, 0.18)", openA: "#6d7668", openB: "#586153", openText: "#ffffff" }
+  );
 }
 
 function renderSummaryItem(label, value) {
